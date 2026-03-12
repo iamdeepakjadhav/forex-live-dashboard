@@ -2,77 +2,146 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forex Data Dashboard</title>
-    <!-- Modern Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css">
-    <!-- Test inline script -->
-    <script>
-        console.log("HELLO FROM HEAD");
-        window.addEventListener('error', function (e) {
-            console.error("Global Error Caught:", e.message, e.filename, e.lineno);
-        });
-    </script>
-    <!-- TradingView Lightweight Charts Library -->
-    <script src="/static/lightweight-charts.js?v=4"></script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Forex Data Dashboard</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="/static/style.css?v=3">
+
+<script>
+console.log("Dashboard booting...");
+window.addEventListener('error',function(e){
+console.error("Global JS Error:",e.message,e.filename,e.lineno);
+});
+</script>
+
+<script src="/static/lightweight-charts.js"></script>
+
 </head>
 
+
 <body>
-    <div class="dashboard-container">
-        <!-- Sidebar / Topbar depending on layout -->
-        <header class="header">
-            <div class="logo">
-                <div class="logo-icon"></div>
-                <h1>Forex Live Dashboard</h1>
-            </div>
 
-            <div class="controls">
-                <div class="control-group">
-                    <label for="symbol-select">Pair:</label>
-                    <select id="symbol-select" class="custom-select">
-                        <option value="EURUSD">EURUSD</option>
-                    </select>
-                </div>
+<div class="dashboard-container">
 
-                <div class="control-group">
-                    <label for="timeframe-select">Timeframe:</label>
-                    <div id="timeframe-buttons" class="timeframe-group">
-                        <!-- Buttons will be generated dynamically -->
-                        <button class="tf-btn active" data-tf="1H">1H</button>
-                    </div>
-                </div>
+<header class="header">
 
-                <div class="status-indicator">
-                    <span class="dot live"></span> <span id="sync-status">Live</span>
-                </div>
-            </div>
-        </header>
+<div class="logo">
+<div class="logo-icon">FX</div>
+<h1>Forex Live Dashboard</h1>
+</div>
 
-        <main class="main-content">
-            <div class="chart-wrapper">
-                <div class="chart-header">
-                    <h2 id="chart-title">EURUSD - 1H</h2>
-                    <div class="chart-stats">
-                        <span id="price-card">O: <span id="stat-o">-</span> H: <span id="stat-h">-</span> L: <span
-                                id="stat-l">-</span> C: <span id="stat-c">-</span></span>
-                    </div>
-                </div>
-                <!-- TradingView Chart Div -->
-                <div id="tvchart" class="chart-container"></div>
+<div class="controls">
 
-                <!-- Loading Overlay -->
-                <div id="loading-overlay" class="loading-overlay hidden">
-                    <div class="spinner"></div>
-                    <p>Fetching Market Data...</p>
-                </div>
-            </div>
-        </main>
-    </div>
+<div class="control-group">
+<label for="symbol-select">Pair</label>
+<select id="symbol-select" class="custom-select"></select>
+</div>
 
-    <!-- Main Logic Script -->
-    <script src="/static/script.js?v=7"></script>
+<div class="control-group">
+<label>Timeframe</label>
+<div id="timeframe-buttons" class="timeframe-group"></div>
+</div>
+
+<div class="status-indicator">
+<span class="dot live"></span>
+<span id="sync-status">LIVE</span>
+</div>
+
+</div>
+
+</header>
+
+
+<main class="main-content">
+
+<div class="dashboard-layout">
+
+<!-- ================= CHART ================= -->
+
+<div class="chart-wrapper">
+
+<div class="chart-header">
+
+<h2 id="chart-title">Loading...</h2>
+
+<div class="chart-stats">
+
+<div id="price-card">
+
+<span>O: <span id="stat-o">-</span></span>
+<span>H: <span id="stat-h">-</span></span>
+<span>L: <span id="stat-l">-</span></span>
+<span>C: <span id="stat-c">-</span></span>
+
+</div>
+
+<span id="live-price-badge" data-status="closed"></span>
+
+</div>
+
+</div>
+
+<div id="tvchart" class="chart-container"></div>
+
+<div id="loading-overlay" class="loading-overlay hidden">
+
+<div class="spinner"></div>
+
+<p>Loading market data...</p>
+
+</div>
+
+</div>
+
+
+<!-- ================= LIVE TICK TABLE ================= -->
+
+<div class="ticks-panel">
+
+<h3>Live Data</h3>
+
+<table class="ticks-table">
+
+<thead>
+
+<tr>
+
+<th>Time</th>
+
+<th>Symbol</th>
+
+<th>Bid</th>
+
+<th>Ask</th>
+
+<th>Spread</th>
+
+</tr>
+
+</thead>
+
+<tbody id="live-ticks-table">
+
+</tbody>
+
+</table>
+
+</div>
+
+
+</div>
+
+</main>
+
+</div>
+
+
+<script src="/static/script.js?v=9"></script>
+
 </body>
-
 </html>

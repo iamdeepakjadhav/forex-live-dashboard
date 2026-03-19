@@ -1,0 +1,3 @@
+taskkill /F /IM python.exe /T 2>$null; Start-Sleep 1; python dashboard/app.py
+
+ngrok http 5000

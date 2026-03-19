@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<meta name="description" content="Real-time forex trading data dashboard">
+
+<title>Forex Data Dashboard</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="/static/style.css?v=3">
+
+<script>
+console.log("Dashboard booting...");
+window.addEventListener('error',function(e){
+console.error("Global JS Error:",e.message,e.filename,e.lineno);
+});
+</script>
+
+<script src="/static/lightweight-charts.js"></script>
+
+</head>
+
+
+<body>
+
+<div class="dashboard-container">
+
+<header class="header">
+  <div class="logo">
+    <div class="logo-icon">FX</div>
+    <h1>Forex Dashboard</h1>
+  </div>
+  
+  <div class="controls">
+    <div class="control-group">
+      <label for="symbol-select">Pair</label>
+      <select id="symbol-select" class="custom-select"></select>
+    </div>
+
+    <div class="control-group">
+      <label>TF</label>
+      <div id="timeframe-buttons" class="timeframe-group"></div>
+    </div>
+
+    <div class="status-indicator">
+      <span class="dot live"></span>
+      <span id="sync-status">LIVE</span>
+    </div>
+  </div>
+</header>
+
+
+<main class="main-content">
+
+<div class="dashboard-layout">
+
+<!-- ================= CHART ================= -->
+
+<div class="chart-wrapper">
+
+<div class="chart-header">
+
+<h2 id="chart-title">Loading...</h2>
+
+<div class="chart-stats">
+
+<div id="price-card">
+
+<span>O: <span id="stat-o">-</span></span>
+<span>H: <span id="stat-h">-</span></span>
+<span>L: <span id="stat-l">-</span></span>
+<span>C: <span id="stat-c">-</span></span>
+
+</div>
+
+<span id="live-price-badge" data-status="closed"></span>
+
+</div>
+
+</div>
+
+<div id="tvchart" class="chart-container"></div>
+
+<div id="loading-overlay" class="loading-overlay hidden">
+
+<div class="spinner"></div>
+
+<p>Loading market data...</p>
+
+</div>
+
+</div>
+
+
+<!-- ================= LIVE TICK TABLE ================= -->
+
+<!-- <div class="ticks-panel">
+
+<h3>Live Data</h3>
+
+<table class="ticks-table">
+
+<thead>
+
+<tr>
+
+<th>Time</th>
+
+<th>Symbol</th>
+
+<th>Bid</th>
+
+<th>Ask</th>
+
+<th>Spread</th>
+
+</tr>
+
+</thead>
+
+<tbody id="live-ticks-table">
+
+</tbody>
+
+</table>
+
+</div> -->
+
+<div class="ticks-panel">
+
+<div class="live-section">
+
+<h3>Live Data</h3>
+
+<div class="scroll-area">
+<table class="ticks-table">
+<thead>
+<tr>
+<th>Time</th>
+<th>Symbol</th>
+<th>Bid</th>
+<th>Ask</th>
+<th>Spread</th>
+</tr>
+</thead>
+
+<tbody id="live-ticks-table"></tbody>
+
+</table>
+</div>
+
+</div>
+
+
+<div class="history-section">
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 8px;">
+    <h3 style="margin: 0; flex-shrink: 0;">Tick History</h3>
+    <a href="/ticks" class="full-history-btn" style="margin: 0; flex-shrink: 0;">⤢ Full View</a>
+</div>
+
+<div class="filters">
+
+<select id="history-symbol">
+<option value="">All</option>
+<option value="EURUSD.x">EURUSD</option>
+<option value="GBPUSD.x">GBPUSD</option>
+<option value="NZDUSD.x">NZDUSD</option>
+</select>
+
+<input type="date" id="history-date">
+
+<button id="history-load">Load</button>
+
+</div>
+
+<div class="scroll-area">
+<table class="ticks-table">
+
+<thead>
+
+<tr>
+<th>Time</th>
+<th>Symbol</th>
+<th>Bid</th>
+<th>Ask</th>
+<th>Spread</th>
+</tr>
+
+</thead>
+
+<tbody id="history-ticks-table"></tbody>
+
+
+</table>
+</div>
+
+</div>
+
+</div>
+
+
+</div>
+
+</main>
+
+</div>
+
+
+<script src="/static/script.js?v=9"></script>
+
+</body>
+</html>

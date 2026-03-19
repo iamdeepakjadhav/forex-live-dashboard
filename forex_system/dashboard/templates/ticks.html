@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tick History | Forex Dashboard</title>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-panel: #1e293b;
+            --border: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --bullish: #10b981;
+            --bearish: #ef4444;
+            --accent: #38bdf8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .title-section h1 {
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-btn {
+            text-decoration: none;
+            color: var(--accent);
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Filter Bar - Updated to Grid for 2 Dates */
+        .filter-bar {
+            background: var(--bg-panel);
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            align-items: flex-end;
+            margin-bottom: 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-group label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        select, input, button {
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+        }
+
+        button {
+            background: var(--accent);
+            color: var(--bg-dark);
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            padding: 10px 20px;
+            transition: opacity 0.2s;
+            height: 35px; /* Match height with inputs */
+        }
+
+        button:hover { opacity: 0.9; }
+
+        /* Table Style */
+        .table-wrapper {
+            background: var(--bg-panel);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            text-align: left;
+        }
+
+        th {
+            background: rgba(0,0,0,0.2);
+            padding: 12px 16px;
+            color: var(--text-muted);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        tr:hover { background: rgba(255,255,255,0.03); }
+
+        .spread-val { color: var(--accent); }
+        .bid-val { color: var(--bullish); }
+        .ask-val { color: var(--bearish); }
+
+        /* Loading State */
+        #loading {
+            padding: 40px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="title-section">
+            <h1><span style="color:var(--accent)">⤢</span> Tick History Explorer</h1>
+        </div>
+        <a href="/" class="back-btn">← Back to Dashboard</a>
+    </header>
+
+    <div class="filter-bar">
+        <div class="filter-group">
+            <label>Symbol</label>
+            <select id="symbolFilter">
+                <option value="ALL">All Symbols</option>
+                <option value="EURUSD.x">EURUSD</option>
+                <option value="GBPUSD.x">GBPUSD</option>
+                <option value="NZDUSD.x">NZDUSD</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label>Start Date</label>
+            <input type="date" id="startDate">
+        </div>
+
+        <div class="filter-group">
+            <label>End Date</label>
+            <input type="date" id="endDate">
+        </div>
+
+        <div class="filter-group">
+            <label>Limit</label>
+            <select id="limitFilter">
+                <option value="100">100 Rows</option>
+                <option value="500">500 Rows</option>
+                <option value="1000">1000 Rows</option>
+                <option value="5000">5000 Rows</option>
+            </select>
+        </div>
+
+        <button onclick="loadTicks()">Apply Filter</button>
+    </div>
+
+    <div class="table-wrapper">
+        <table id="tickTable">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Symbol</th>
+                    <th>Bid</th>
+                    <th>Ask</th>
+                    <th>Spread (Pips)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data will be injected here -->
+            </tbody>
+        </table>
+        <div id="loading" class="hidden">Fetching historical data...</div>
+    </div>
+</div>
+
+<script>
+    async function loadTicks() {
+        const tableBody = document.querySelector("#tickTable tbody");
+        const loader = document.getElementById("loading");
+        
+        // Naye IDs se values nikalna
+        const symbol = document.getElementById("symbolFilter").value;
+        const startDate = document.getElementById("startDate").value;
+        const endDate = document.getElementById("endDate").value;
+        const limit = document.getElementById("limitFilter").value;
+
+        // Validation - at least one filter should be applied
+        if (!startDate && !endDate && symbol === "ALL") {
+            loader.classList.remove("hidden");
+            loader.innerText = "Please select at least Symbol, or Date Range to filter.";
+            return;
+        }
+
+        // UI Reset
+        tableBody.innerHTML = "";
+        loader.classList.remove("hidden");
+        loader.innerText = "Fetching data with filters...";
+
+        // Construct URL with proper params
+        const params = new URLSearchParams();
+        params.append("limit", limit);
+        
+        if (symbol !== "ALL") params.append("symbol", symbol);
+        
+        // Start date aur End Date Params (YYYY-MM-DD format)
+        if (startDate) params.append("start_date", startDate);
+        if (endDate) params.append("end_date", endDate);
+
+        const url = `/api/ticks/history?${params.toString()}`;
+        console.log("📊 Requesting URL:", url);
+        console.log("Filters - Symbol:", symbol, "Start:", startDate, "End:", endDate, "Limit:", limit);
+
+        try {
+            const res = await fetch(url);
+            
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(`Backend error: ${errorData.error || 'Unknown error'}`);
+            }
+            
+            const data = await res.json();
+            console.log("✅ Retrieved", data.length, "ticks from backend");
+            loader.classList.add("hidden");
+
+            if (!data || data.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:40px; color:#94a3b8;">🔍 No ticks found for the selected filters.<br><small>Try adjusting date range or check /api/debug/ticks-count</small></td></tr>`;
+                return;
+            }
+
+            const fragment = document.createDocumentFragment();
+
+            data.forEach(t => {
+                const d = new Date(t.time * 1000);
+                const spreadPips = (t.spread * 10000).toFixed(1);
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${d.toLocaleDateString()}</td>
+                    <td>${d.toLocaleTimeString()}</td>
+                    <td style="font-weight:700; color:white;">${t.symbol}</td>
+                    <td class="bid-val">${t.bid.toFixed(5)}</td>
+                    <td class="ask-val">${t.ask.toFixed(5)}</td>
+                    <td class="spread-val">${spreadPips}</td>
+                `;
+                fragment.appendChild(tr);
+            });
+            
+            tableBody.appendChild(fragment);
+
+        } catch (err) {
+            console.error("❌ Fetch Error:", err);
+            loader.classList.remove("hidden");
+            loader.innerText = `Failed to load data: ${err.message}`;
+        }
+    }
+
+    // Auto load on page open with last 1000 rows
+    window.onload = () => {
+        console.log("Page loaded - loading recent ticks...");
+        document.getElementById("limitFilter").value = "1000"; // Set default limit
+        loadTicks();
+    };
+</script>
+
+</body>
+</html>

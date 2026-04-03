@@ -67,6 +67,8 @@ class MT5LiveCollector:
         self.symbols = symbols or ["EURUSD", "GBPUSD", "USDJPY"]
         self.mt5_initialized = False
         self.running = False
+        self.latest_ticks = {}
+        self._latest_ticks_lock = threading.Lock()
 
         try:
             self.db_pool = psycopg2.pool.SimpleConnectionPool(
@@ -138,6 +140,34 @@ class MT5LiveCollector:
             logger.error("Tick read error %s: %s", symbol, e)
             return None
 
+    def _cache_tick(self, symbol, tick):
+        """Store the latest tick in memory for fast dashboard reads."""
+        exact_time = tick.time_msc / 1000.0 if hasattr(tick, "time_msc") else tick.time
+        tick_data = {
+            "symbol": symbol,
+            "time": exact_time,
+            "bid": float(tick.bid),
+            "ask": float(tick.ask),
+            "last": (float(tick.bid) + float(tick.ask)) / 2,
+            "spread": float(tick.ask) - float(tick.bid),
+        }
+
+        with self._latest_ticks_lock:
+            self.latest_ticks[symbol] = tick_data
+
+    def get_latest_ticks_snapshot(self):
+        """Return the latest cached tick for each symbol."""
+        with self._latest_ticks_lock:
+            snapshot = list(self.latest_ticks.values())
+
+        snapshot.sort(key=lambda item: item["time"], reverse=True)
+        return snapshot
+
+    def get_latest_tick_snapshot(self, symbol):
+        """Return the latest cached tick for a symbol, if available."""
+        with self._latest_ticks_lock:
+            return self.latest_ticks.get(symbol)
+
 # ================= DB CONNECTION =================
 
     def _get_db_connection(self):
@@ -199,6 +229,7 @@ class MT5LiveCollector:
                 tick = mt5.symbol_info_tick(symbol)
 
                 if tick:
+                    self._cache_tick(symbol, tick)
                     self._save_tick(symbol, tick)
 
                 time.sleep(0.1)

@@ -12,14 +12,22 @@ from src.parser import DukascopyParser, parse_batch
 from src.candle_generator import CandleGenerator
 from src.db_storage import DBStorage
 
-# SYMBOLS = [
-#     "EURUSD", "GBPUSD", "USDJPY", "USDCHF", "AUDUSD",
-#     "USDCAD", "NZDUSD", "EURGBP", "EURJPY", "GBPJPY"
-# ]
-
 SYMBOLS = [
-    "GBPJPY"
+    "EURUSD", "GBPUSD", 
+    "USDJPY", "USDCHF", "AUDUSD",
+
+    "USDCAD", 
+    "NZDUSD", "EURGBP", "EURJPY", "GBPJPY"
 ]
+
+# SYMBOLS = [
+#     # "USDCAD", 
+#     # "NZDUSD",
+#     #   "EURGBP",
+#     #   "EURJPY",
+#     #   "USDJPY",
+#         "USDCHF", "AUDUSD"
+# ]
 
 MAX_WORKERS = multiprocessing.cpu_count()  # Using all cores for maximum speed
 
@@ -129,7 +137,10 @@ def run_pipeline(start_date: datetime, end_date: datetime):
 if __name__ == "__main__":
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     
-    start_date = datetime(2010, 1, 1)
-    end_date = now - timedelta(hours=1)
+    start_date = datetime(2003, 1, 1)
+    # end_date = now - timedelta(hours=1)
+    end_date = datetime(2026, 1, 1)
 
     run_pipeline(start_date, end_date)
+
+

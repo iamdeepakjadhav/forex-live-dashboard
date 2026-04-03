@@ -6,7 +6,7 @@ import random
 class AsyncDukascopyDownloader:
     BASE_URL = "https://datafeed.dukascopy.com/datafeed"
 
-    def __init__(self, data_dir="data", max_concurrent= 20):
+    def __init__(self, data_dir="data", max_concurrent= 50):
         self.data_dir = data_dir
         if not os.path.exists(self.data_dir):
             os.makedirs(self.data_dir)

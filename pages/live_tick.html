@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tick Data</title>
+  <style>
+    body {
+      font-family: Inter, sans-serif;
+      background: #F8FAFC;
+      margin: 0;
+    }
+    .header {
+      background: #011527;
+      color: white;
+      padding: 15px 20px;
+    }
+    .container {
+      padding: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px;
+      text-align: left;
+    }
+    th {
+      background: #1572d2;
+      color: white;
+    }
+    tr:nth-child(even) {
+      background: #f2f2f2;
+    }
+    .live {
+      color: green;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">📊 Tick Data (Live)</div>
+
+<div class="container">
+  <p class="live">● Live Data</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>Symbol</th>
+        <th>Price</th>
+        <th>Volume</th>
+        <th>Change %</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>10:30:12</td>
+        <td>BTC</td>
+        <td>₹52,000</td>
+        <td>120</td>
+        <td style="color:green;">+1.2%</td>
+      </tr>
+      <tr>
+        <td>10:30:15</td>
+        <td>ETH</td>
+        <td>₹3,200</td>
+        <td>80</td>
+        <td style="color:red;">-0.5%</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chart View</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Inter, sans-serif;
+      background: #F8FAFC;
+      margin: 0;
+    }
+    .header {
+      background: #011527;
+      color: white;
+      padding: 15px 20px;
+    }
+    .container {
+      padding: 20px;
+    }
+    .controls {
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 10px 15px;
+      border-radius: 20px;
+      border: none;
+      background: #1572d2;
+      color: white;
+      margin-right: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">📈 Chart View</div>
+
+<div class="container">
+
+  <div class="controls">
+    <button>1M</button>
+    <button>5M</button>
+    <button>1H</button>
+    <button>1D</button>
+  </div>
+
+  <canvas id="myChart"></canvas>
+
+</div>
+
+<script>
+const ctx = document.getElementById('myChart');
+
+new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: ['10:00', '10:10', '10:20', '10:30'],
+    datasets: [{
+      label: 'Price',
+      data: [50000, 51000, 49500, 52000],
+      borderWidth: 2
+    }]
+  }
+});
+</script>
+
+</body>
+</html>

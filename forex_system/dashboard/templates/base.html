@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Forex Dashboard{% endblock %}</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Inter, sans-serif;
+            display: flex;
+            height: 100vh;
+            background: #F8FAFC;
+        }
+
+        /* ============ Sidebar ============ */
+        .sidebar {
+            width: 220px;
+            background: #011527;
+            color: white;
+            padding-top: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 18px;
+            padding: 0 15px;
+        }
+
+        .menu {
+            list-style: none;
+            padding: 0;
+        }
+
+        .menu li {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+
+        .menu li:hover {
+            background: rgba(21, 114, 210, 0.2);
+            border-left-color: #1572d2;
+        }
+
+        .menu li.active {
+            background: #1572d2;
+            border-left-color: #0d47a1;
+            font-weight: 600;
+        }
+
+        /* ============ Main Content ============ */
+        .main {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .page-content {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            flex: 1;
+        }
+
+        .page-header {
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 15px;
+        }
+
+        .page-header h2 {
+            font-size: 24px;
+            color: #011527;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* ============ Tables ============ */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #1572d2;
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        tr:hover {
+            background: #f0f5ff;
+        }
+
+        /* ============ Controls ============ */
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        input, select, button {
+            padding: 10px 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-family: Inter, sans-serif;
+            font-size: 14px;
+        }
+
+        input, select {
+            background: white;
+            color: #333;
+        }
+
+        button {
+            background: #1572d2;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #0d47a1;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(21, 114, 210, 0.3);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* ============ Status ============ */
+        .live {
+            color: #10b981;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-badge.live {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        /* ============ Chart ============ */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            margin-top: 20px;
+        }
+
+        /* ============ Color Utilities ============ */
+        .text-green {
+            color: #10b981;
+        }
+
+        .text-red {
+            color: #ef4444;
+        }
+
+        /* ============ Scrollbar ============ */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+    {% block extra_styles %}{% endblock %}
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <h2>📊 Forex Dashboard</h2>
+        <ul class="menu">
+            <li class="{% if page == 'tick' %}active{% endif %}" onclick="goToPage('tick')">
+                📈 Live Tick
+            </li>
+            <li class="{% if page == 'history' %}active{% endif %}" onclick="goToPage('history')">
+                📁 History
+            </li>
+            <li class="{% if page == 'chart' %}active{% endif %}" onclick="goToPage('chart')">
+                📉 Chart
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main">
+        <div class="page-content">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <script>
+        function goToPage(page) {
+            window.location.href = '/' + page;
+        }
+    </script>
+
+    {% block extra_scripts %}{% endblock %}
+
+</body>
+</html>

@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+
+{% block title %}Live Tick - Forex Dashboard{% endblock %}
+
+{% block extra_styles %}
+    <style>
+        /* Fast, Clean, Minimal UI */
+        .live-symbols-container {
+            padding: 0;
+            margin: 0;
+        }
+
+        .page-header {
+            margin-bottom: 20px;
+        }
+
+        .page-header h2 {
+            margin: 0 0 15px 0;
+            font-size: 24px;
+            color: #011527;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: #d1fae5;
+            border-radius: 20px;
+            color: #065f46;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Symbols Table - Fast Display */
+        .symbols-table-container {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .symbols-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+        }
+
+        .symbols-table thead {
+            background: #f0f4f8;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .symbols-table th {
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 700;
+            color: #475569;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .symbols-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 13px;
+            vertical-align: middle;
+        }
+
+        .symbols-table tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+        .symbols-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .symbol-name {
+            font-weight: 700;
+            color: #0f172a;
+            min-width: 100px;
+        }
+
+        .bid-price {
+            color: #10b981;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+            min-width: 90px;
+        }
+
+        .ask-price {
+            color: #ef4444;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+            min-width: 90px;
+        }
+
+        .mid-price {
+            color: #1572d2;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+            min-width: 90px;
+        }
+
+        .spread-value {
+            color: #8b5cf6;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+            min-width: 80px;
+        }
+
+        .update-time {
+            color: #94a3b8;
+            font-size: 11px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .loading-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: blink 0.6s infinite;
+            margin-left: 8px;
+        }
+
+        @keyframes blink {
+            0%, 49%, 100% { opacity: 0.3; }
+            50%, 100% { opacity: 1; }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="live-symbols-container">
+        <div class="page-header">
+            <h2>📊 Live Tick Data <span class="loading-indicator"></span></h2>
+            <span class="status-badge"><span class="live-dot"></span>Live MT5 Data</span>
+        </div>
+
+        <div class="symbols-table-container">
+            <table class="symbols-table">
+                <thead>
+                    <tr>
+                        <th style="width: 120px;">Symbol</th>
+                        <th style="width: 110px;">Bid</th>
+                        <th style="width: 110px;">Ask</th>
+                        <th style="width: 110px;">Mid</th>
+                        <th style="width: 100px;">Spread (pips)</th>
+                        <th style="width: 140px;">Last Update</th>
+                    </tr>
+                </thead>
+                <tbody id="symbols-tbody">
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #999; padding: 40px;">
+                            Loading live data from MT5...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_scripts %}
+    <script>
+        // ============ STATE ============
+        let symbolsLatestData = {}; // {symbol: {bid, ask, mid, spread, time}}
+        let updateInterval = null;
+        let updateTimeout = null;
+        let isLoading = false;
+
+        // ============ DOM ELEMENTS ============
+        const tbody = document.getElementById('symbols-tbody');
+
+        // ============ FORMAT TIME ============
+        function formatTime(epochSeconds) {
+            const date = new Date(epochSeconds * 1000);
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            return `${hours}:${minutes}:${seconds}`;
+        }
+
+        // ============ FETCH AND UPDATE LIVE DATA (ULTRA FAST) ============
+        async function updateLiveData() {
+            if (isLoading) return;
+            isLoading = true;
+
+            try {
+                // Fetch latest ticks
+                const response = await fetch('/api/ticks?limit=20');
+                const ticks = await response.json();
+
+                // Group by symbol - keep only latest for each
+                const latest = {};
+                ticks.forEach(tick => {
+                    if (!latest[tick.symbol]) {
+                        latest[tick.symbol] = {
+                            bid: Number(tick.bid),
+                            ask: Number(tick.ask),
+                            spread: Number(tick.spread),
+                            time: tick.time,
+                            mid: (Number(tick.bid) + Number(tick.ask)) / 2
+                        };
+                    }
+                });
+
+                symbolsLatestData = latest;
+
+                // Render table
+                renderTable();
+            } catch (error) {
+                console.error('Error fetching live data:', error);
+            } finally {
+                isLoading = false;
+            }
+        }
+
+        // ============ RENDER SYMBOLS TABLE ============
+        function renderTable() {
+            const symbols = Object.keys(symbolsLatestData).sort();
+
+            if (symbols.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #999; padding: 40px;">No data available</td></tr>';
+                return;
+            }
+
+            const fragment = document.createDocumentFragment();
+
+            symbols.forEach(symbol => {
+                const data = symbolsLatestData[symbol];
+                const row = document.createElement('tr');
+
+                const bid = data.bid.toFixed(5);
+                const ask = data.ask.toFixed(5);
+                const mid = data.mid.toFixed(5);
+                const spread = (data.spread * 10000).toFixed(1);
+                const timeStr = formatTime(data.time);
+
+                row.innerHTML = `
+                    <td class="symbol-name">${symbol.replace('.x', '')}</td>
+                    <td class="bid-price">${bid}</td>
+                    <td class="ask-price">${ask}</td>
+                    <td class="mid-price">${mid}</td>
+                    <td class="spread-value">${spread}</td>
+                    <td class="update-time">${timeStr}</td>
+                `;
+
+                fragment.appendChild(row);
+            });
+
+            tbody.innerHTML = '';
+            tbody.appendChild(fragment);
+        }
+
+        // ============ START LIVE POLLING (FAST UPDATES) ============
+        function startLiveUpdates() {
+            if (updateTimeout) clearTimeout(updateTimeout);
+            if (updateInterval) clearInterval(updateInterval);
+
+            const loop = async () => {
+                await updateLiveData();
+                updateTimeout = setTimeout(loop, 120);
+            };
+
+            loop();
+        }
+
+        // ============ INITIALIZE ============
+        document.addEventListener('DOMContentLoaded', () => {
+            startLiveUpdates();
+        });
+
+        // ============ CLEANUP ============
+        window.addEventListener('beforeunload', () => {
+            if (updateTimeout) clearTimeout(updateTimeout);
+            if (updateInterval) clearInterval(updateInterval);
+        });
+    </script>
+{% endblock %}

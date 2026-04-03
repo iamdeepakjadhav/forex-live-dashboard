@@ -168,29 +168,34 @@
         <div class="filter-group">
             <label>Symbol</label>
             <select id="symbolFilter">
-                <option value="ALL">All Symbols</option>
-                <option value="EURUSD.x">EURUSD</option>
-                <option value="GBPUSD.x">GBPUSD</option>
-                <option value="NZDUSD.x">NZDUSD</option>
+                <option value="">All Symbols</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label>Year</label>
+            <select id="yearFilter">
+                <option value="">All Years</option>
             </select>
         </div>
 
         <div class="filter-group">
             <label>Start Date</label>
-            <input type="date" id="startDate">
+            <input type="date" id="startDate" autocomplete="off">
         </div>
 
         <div class="filter-group">
             <label>End Date</label>
-            <input type="date" id="endDate">
+            <input type="date" id="endDate" autocomplete="off">
         </div>
 
         <div class="filter-group">
-            <label>Limit</label>
+            <label>Rows</label>
             <select id="limitFilter">
-                <option value="100">100 Rows</option>
+                <option value="200">200 Rows</option>
                 <option value="500">500 Rows</option>
                 <option value="1000">1000 Rows</option>
+                <option value="2000">2000 Rows</option>
                 <option value="5000">5000 Rows</option>
             </select>
         </div>
@@ -219,41 +224,70 @@
 </div>
 
 <script>
+    // Load available symbols and populate dropdowns
+    async function initializeFilters() {
+        try {
+            const res = await fetch('/api/symbols');
+            const symbols = await res.json();
+            
+            const symbolSelect = document.getElementById('symbolFilter');
+            symbols.forEach(symbol => {
+                const option = document.createElement('option');
+                option.value = symbol;
+                option.textContent = symbol;
+                symbolSelect.appendChild(option);
+            });
+
+            // Generate year options (from 2010 to current year)
+            const currentYear = new Date().getFullYear();
+            const yearSelect = document.getElementById('yearFilter');
+            for (let year = 2010; year <= currentYear; year++) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                yearSelect.appendChild(option);
+            }
+        } catch (err) {
+            console.error("Error initializing filters:", err);
+        }
+    }
+
     async function loadTicks() {
         const tableBody = document.querySelector("#tickTable tbody");
         const loader = document.getElementById("loading");
         
-        // Naye IDs se values nikalna
         const symbol = document.getElementById("symbolFilter").value;
-        const startDate = document.getElementById("startDate").value;
-        const endDate = document.getElementById("endDate").value;
+        const year = document.getElementById("yearFilter").value;
+        let startDate = document.getElementById("startDate").value;
+        let endDate = document.getElementById("endDate").value;
         const limit = document.getElementById("limitFilter").value;
 
-        // Validation - at least one filter should be applied
-        if (!startDate && !endDate && symbol === "ALL") {
-            loader.classList.remove("hidden");
-            loader.innerText = "Please select at least Symbol, or Date Range to filter.";
-            return;
+        // Force clear date values if they look invalid
+        if (startDate && (startDate.includes("0000") || startDate.includes("1970"))) {
+            startDate = "";
+            document.getElementById("startDate").value = "";
+        }
+        if (endDate && (endDate.includes("0000") || endDate.includes("1970"))) {
+            endDate = "";
+            document.getElementById("endDate").value = "";
         }
 
         // UI Reset
         tableBody.innerHTML = "";
         loader.classList.remove("hidden");
-        loader.innerText = "Fetching data with filters...";
+        loader.innerText = "Fetching data...";
 
         // Construct URL with proper params
         const params = new URLSearchParams();
         params.append("limit", limit);
         
-        if (symbol !== "ALL") params.append("symbol", symbol);
-        
-        // Start date aur End Date Params (YYYY-MM-DD format)
-        if (startDate) params.append("start_date", startDate);
-        if (endDate) params.append("end_date", endDate);
+        if (symbol) params.append("symbol", symbol);
+        if (year) params.append("year", year);
+        if (startDate && startDate !== "") params.append("start_date", startDate);
+        if (endDate && endDate !== "") params.append("end_date", endDate);
 
         const url = `/api/ticks/history?${params.toString()}`;
         console.log("📊 Requesting URL:", url);
-        console.log("Filters - Symbol:", symbol, "Start:", startDate, "End:", endDate, "Limit:", limit);
 
         try {
             const res = await fetch(url);
@@ -268,7 +302,7 @@
             loader.classList.add("hidden");
 
             if (!data || data.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:40px; color:#94a3b8;">🔍 No ticks found for the selected filters.<br><small>Try adjusting date range or check /api/debug/ticks-count</small></td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:40px; color:#94a3b8;">🔍 No data found for selected filters.</td></tr>`;
                 return;
             }
 
@@ -299,11 +333,24 @@
         }
     }
 
-    // Auto load on page open with last 1000 rows
+    // Initialize on page load
     window.onload = () => {
-        console.log("Page loaded - loading recent ticks...");
-        document.getElementById("limitFilter").value = "1000"; // Set default limit
-        loadTicks();
+        console.log("Initializing filters...");
+        initializeFilters().then(() => {
+            console.log("Loading recent data...");
+            document.getElementById("limitFilter").value = "200";
+            // Clear all filters to show data from any available year
+            document.getElementById("yearFilter").value = "";
+            document.getElementById("symbolFilter").value = "";
+            
+            // Force clear date inputs
+            setTimeout(() => {
+                document.getElementById("startDate").value = "";
+                document.getElementById("endDate").value = "";
+                console.log("Cleared date inputs");
+                loadTicks();
+            }, 100);
+        });
     };
 </script>
 

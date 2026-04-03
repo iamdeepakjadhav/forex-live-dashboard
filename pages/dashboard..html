@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  display: flex;
+  height: 100vh;
+  background: #F8FAFC;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 220px;
+  background: #011527;
+  color: white;
+  padding-top: 20px;
+}
+
+.sidebar h2 {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.menu {
+  list-style: none;
+  padding: 0;
+}
+
+.menu li {
+  padding: 15px 20px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.menu li:hover,
+.menu li.active {
+  background: #1572d2;
+}
+
+/* Main Content */
+.main {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  margin-top: 20px;
+}
+
+th, td {
+  padding: 12px;
+  text-align: left;
+}
+
+th {
+  background: #1572d2;
+  color: white;
+}
+
+tr:nth-child(even) {
+  background: #f2f2f2;
+}
+
+.live {
+  color: green;
+  font-weight: bold;
+}
+
+/* Buttons */
+button {
+  padding: 10px 15px;
+  border-radius: 20px;
+  border: none;
+  background: #1572d2;
+  color: white;
+  margin-right: 10px;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <h2>Forex Dashboard</h2>
+  <ul class="menu">
+    <li class="active" onclick="showPage('tick')">Live Tick</li>
+    <li onclick="showPage('history')">History</li>
+    <li onclick="showPage('chart')">Chart</li>
+  </ul>
+</div>
+
+<!-- Main Content -->
+<div class="main" id="content">
+
+</div>
+
+<script>
+
+// Pages HTML
+const pages = {
+
+tick: `
+<h2>📊 Live Tick Data</h2>
+<p class="live">● Live Data</p>
+
+<table>
+<thead>
+<tr>
+<th>Time</th>
+<th>Symbol</th>
+<th>Price</th>
+<th>Volume</th>
+<th>Change %</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>10:30:12</td>
+<td>BTC</td>
+<td>₹52,000</td>
+<td>120</td>
+<td style="color:green;">+1.2%</td>
+</tr>
+<tr>
+<td>10:30:15</td>
+<td>ETH</td>
+<td>₹3,200</td>
+<td>80</td>
+<td style="color:red;">-0.5%</td>
+</tr>
+</tbody>
+</table>
+`,
+
+history: `
+<h2>📁 History Data</h2>
+
+<div>
+<input type="date">
+<input type="date">
+<button>Filter</button>
+<button>Export CSV</button>
+</div>
+
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Open</th>
+<th>Close</th>
+<th>High</th>
+<th>Low</th>
+<th>Volume</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2026-03-18</td>
+<td>50000</td>
+<td>52000</td>
+<td>53000</td>
+<td>49000</td>
+<td>1500</td>
+</tr>
+</tbody>
+</table>
+`,
+
+chart: `
+<h2>📈 Chart View</h2>
+
+<div>
+<button>1M</button>
+<button>5M</button>
+<button>1H</button>
+<button>1D</button>
+</div>
+
+<canvas id="myChart"></canvas>
+`
+};
+
+// Load Page
+function showPage(page) {
+  document.getElementById("content").innerHTML = pages[page];
+
+  // Active class
+  document.querySelectorAll(".menu li").forEach(el => el.classList.remove("active"));
+  event.target.classList.add("active");
+
+  // Load Chart if needed
+  if (page === "chart") {
+    setTimeout(loadChart, 100);
+  }
+}
+
+// Chart
+function loadChart() {
+  const ctx = document.getElementById('myChart');
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ['10:00', '10:10', '10:20', '10:30'],
+      datasets: [{
+        label: 'Price',
+        data: [50000, 51000, 49500, 52000],
+        borderWidth: 2
+      }]
+    }
+  });
+}
+
+// Default load
+showPage('tick');
+
+</script>
+
+</body>
+</html>

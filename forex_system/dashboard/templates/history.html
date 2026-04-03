@@ -1,0 +1,759 @@
+{% extends "base.html" %}
+
+{% block title %}History Data - Forex Dashboard{% endblock %}
+
+{% block extra_styles %}
+    <style>
+        .filter-section {
+            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .filter-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #011527;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .filter-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 10px 12px;
+            border: 2px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+            color: #011527;
+            transition: all 0.3s ease;
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: #1572d2;
+            box-shadow: 0 0 0 3px rgba(21, 114, 210, 0.1);
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-filter,
+        .btn-reset,
+        .btn-export {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-filter {
+            background: #1572d2;
+            color: white;
+        }
+
+        .btn-filter:hover {
+            background: #0d47a1;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(21, 114, 210, 0.3);
+        }
+
+        .btn-reset {
+            background: #f3f4f6;
+            color: #6b7280;
+            border: 1px solid #d1d5db;
+        }
+
+        .btn-reset:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-export {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-export:hover {
+            background: #059669;
+        }
+
+        .data-info {
+            background: linear-gradient(135deg, #ecf0f1 0%, #e0e0e0 100%);
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            color: #555;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .data-info span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .data-info strong {
+            color: #1572d2;
+        }
+
+        .table-wrapper {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th {
+            background: #1572d2;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 11px 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        tr:hover {
+            background: #f9fafb;
+        }
+
+        tr:nth-child(even) {
+            background: #fafbfc;
+        }
+
+        .price-up {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .price-down {
+            color: #ef4444;
+            font-weight: 600;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f0f0f0;
+            border-top: 3px solid #1572d2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-msg {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 30px;
+            color: #999;
+        }
+
+        .load-more-wrapper {
+            display: none;
+            justify-content: center;
+            padding: 14px 0 4px;
+        }
+
+        .btn-load-more {
+            background: #0f766e;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-load-more:hover {
+            background: #115e59;
+        }
+
+        .btn-load-more:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="page-header">
+        <h2>📁 Historical Data</h2>
+    </div>
+
+    <!-- Error Message -->
+    <div class="error-msg" id="error-msg"></div>
+
+    <!-- Filters Section -->
+    <div class="filter-section">
+        <div class="filter-title">🔍 Filters</div>
+        
+        <div class="filter-grid">
+            <div class="filter-group">
+                <label>Symbol</label>
+                <select id="filter-symbol">
+                    <option value="EURUSD.x">EURUSD</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Timeframe</label>
+                <select id="filter-timeframe">
+                    <option value="">Loading...</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Year</label>
+                <select id="filter-year">
+                    <option value="">All Years</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Month</label>
+                <select id="filter-month">
+                    <option value="">All Months</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Date</label>
+                <input type="date" id="filter-date">
+            </div>
+        </div>
+
+        <div class="filter-actions">
+            <button class="btn-filter" onclick="applyFilters()">🔍 Search</button>
+            <button class="btn-reset" onclick="resetFilters()">↻ Reset</button>
+            <button class="btn-export" onclick="exportCSV()">📥 Export CSV</button>
+        </div>
+    </div>
+
+    <!-- Data Info -->
+    <div class="data-info">
+        <span>📊 Total Records: <strong id="total-count">0</strong></span>
+        <span>📅 Date Range: <strong id="date-range">-</strong></span>
+        <span>⏱️ Timeframe: <strong id="tf-display">1H</strong></span>
+    </div>
+
+    <!-- Data Table -->
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date & Time</th>
+                    <th>Symbol</th>
+                    <th>Open</th>
+                    <th>High</th>
+                    <th>Low</th>
+                    <th>Close</th>
+                    <th>Volume</th>
+                </tr>
+            </thead>
+            <tbody id="history-table">
+                <tr class="no-data">
+                    <td colspan="7">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <p>Select filters and click Search to load data...</p>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="load-more-wrapper" id="load-more-wrapper">
+            <button class="btn-load-more" id="load-more-btn" onclick="loadMoreHistory()">Load More</button>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_scripts %}
+    <script>
+        // ============ State ============
+        let currentSymbol = 'EURUSD.x';
+        let currentTimeframe = '1H';
+        let allData = [];
+        let symbolsCache = null;
+        let dateRangeCache = null;
+        let hasMoreRows = false;
+        let nextBeforeTime = null;
+        let isLoadingMore = false;
+        const PAGE_SIZE = 500;
+
+        // ============ DOM Elements ============
+        const symbolSelect = document.getElementById('filter-symbol');
+        const timeframeSelect = document.getElementById('filter-timeframe');
+        const yearSelect = document.getElementById('filter-year');
+        const monthSelect = document.getElementById('filter-month');
+        const dateInput = document.getElementById('filter-date');
+        const historyTable = document.getElementById('history-table');
+        const errorMsg = document.getElementById('error-msg');
+        const loadMoreWrapper = document.getElementById('load-more-wrapper');
+        const loadMoreBtn = document.getElementById('load-more-btn');
+
+        // ============ Debounce Function ============
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // ============ Load Symbols (Cached) ============
+        async function loadSymbols() {
+            try {
+                // Return cached symbols if available
+                if (symbolsCache) {
+                    return symbolsCache;
+                }
+
+                const res = await fetch(`/api/history/symbols?timeframe=${currentTimeframe}`);
+                const symbols = await res.json();
+                symbolsCache = symbols; // Cache
+
+                symbolSelect.innerHTML = '';
+                symbols.forEach(sym => {
+                    const option = document.createElement('option');
+                    option.value = sym;
+                    option.textContent = sym.replace('.x', '');
+                    symbolSelect.appendChild(option);
+                });
+
+                if (symbols.length > 0) {
+                    currentSymbol = symbols[0];
+                    symbolSelect.value = currentSymbol;
+                }
+                return symbols;
+            } catch (error) {
+                showError('Failed to load symbols');
+                return [];
+            }
+        }
+
+        // ============ Load Timeframes ============
+        async function loadTimeframes() {
+            try {
+                const res = await fetch('/api/timeframes');
+                const timeframes = await res.json();
+
+                timeframeSelect.innerHTML = '';
+
+                if (!Array.isArray(timeframes) || timeframes.length === 0) {
+                    timeframeSelect.innerHTML = '<option value="1H">1H</option>';
+                    currentTimeframe = '1H';
+                    document.getElementById('tf-display').textContent = currentTimeframe;
+                    return ['1H'];
+                }
+
+                timeframes.forEach(tf => {
+                    const option = document.createElement('option');
+                    option.value = tf;
+                    option.textContent = tf;
+                    timeframeSelect.appendChild(option);
+                });
+
+                const preferred = timeframes.includes(currentTimeframe) ? currentTimeframe : timeframes[0];
+                currentTimeframe = preferred;
+                timeframeSelect.value = preferred;
+                document.getElementById('tf-display').textContent = preferred;
+                return timeframes;
+            } catch (error) {
+                console.error('Error loading timeframes:', error);
+                timeframeSelect.innerHTML = '<option value="1H">1H</option>';
+                currentTimeframe = '1H';
+                document.getElementById('tf-display').textContent = currentTimeframe;
+                return ['1H'];
+            }
+        }
+
+        // ============ Load Available Dates (Cached & Debounced) ============
+        const loadAvailableDatesDebounced = debounce(async () => {
+            try {
+                const previousYear = yearSelect.value;
+                const previousMonth = monthSelect.value;
+                const params = new URLSearchParams({
+                    symbol: currentSymbol,
+                    timeframe: currentTimeframe
+                });
+
+                if (previousYear) {
+                    params.append('year', previousYear);
+                }
+
+                const res = await fetch(
+                    `/api/history/dates-available?${params.toString()}`
+                );
+                const data = await res.json();
+
+                // Load years
+                yearSelect.innerHTML = '<option value="">All Years</option>';
+                (data.years || []).forEach(year => {
+                    const option = document.createElement('option');
+                    option.value = year;
+                    option.textContent = year;
+                    yearSelect.appendChild(option);
+                });
+
+                if (previousYear && (data.years || []).map(String).includes(String(previousYear))) {
+                    yearSelect.value = String(previousYear);
+                } else {
+                    yearSelect.value = '';
+                }
+
+                // Load only actually available months for current symbol/timeframe/year
+                monthSelect.innerHTML = '<option value="">All Months</option>';
+                (data.months || []).forEach(monthNum => {
+                    const option = document.createElement('option');
+                    option.value = monthNum;
+                    option.textContent = new Date(2000, monthNum - 1).toLocaleString('en', { month: 'long' });
+                    monthSelect.appendChild(option);
+                });
+
+                if (previousMonth && (data.months || []).map(String).includes(String(previousMonth))) {
+                    monthSelect.value = String(previousMonth);
+                } else {
+                    monthSelect.value = '';
+                }
+
+                // Set date range limits
+                if (data.min_date && data.max_date) {
+                    dateInput.min = data.min_date;
+                    dateInput.max = data.max_date;
+                }
+                
+                dateRangeCache = data;
+            } catch (error) {
+                console.error('Error loading available dates:', error);
+            }
+        }, 300); // Wait 300ms before fetching
+
+        // ============ Apply Filters (Debounced) ============
+        function buildHistoryUrl(beforeCursor = null) {
+            const year = yearSelect.value;
+            const month = monthSelect.value;
+            const date = dateInput.value;
+            let url = `/api/history/candles?symbol=${currentSymbol}&timeframe=${currentTimeframe}&limit=${PAGE_SIZE}`;
+
+            if (year) url += `&year=${year}`;
+            if (month) url += `&month=${month}`;
+            if (date) url += `&date=${date}`;
+            if (beforeCursor) url += `&before_time=${beforeCursor}`;
+
+            return url;
+        }
+
+        async function fetchHistoryBatch({ append = false } = {}) {
+            if (append && (!hasMoreRows || isLoadingMore)) {
+                return;
+            }
+
+            if (!append) {
+                showLoading();
+                errorMsg.style.display = 'none';
+                allData = [];
+                hasMoreRows = false;
+                nextBeforeTime = null;
+                updateLoadMoreState();
+            } else {
+                isLoadingMore = true;
+                loadMoreBtn.disabled = true;
+                loadMoreBtn.textContent = 'Loading...';
+            }
+
+            try {
+                const res = await fetch(buildHistoryUrl(append ? nextBeforeTime : null));
+                const data = await res.json();
+
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+
+                const hasMoreHeader = res.headers.get('X-Has-More');
+                const nextBeforeHeader = res.headers.get('X-Next-Before-Time');
+                hasMoreRows = hasMoreHeader === '1';
+                nextBeforeTime = nextBeforeHeader ? Number(nextBeforeHeader) : null;
+
+                if (append) {
+                    allData = allData.concat(data);
+                    appendRows(data);
+                } else {
+                    allData = data;
+                    displayData(data);
+                }
+
+                updateLoadMoreState();
+            } catch (error) {
+                showError('Failed to fetch data: ' + error.message);
+            } finally {
+                if (append) {
+                    isLoadingMore = false;
+                    loadMoreBtn.disabled = false;
+                    loadMoreBtn.textContent = 'Load More';
+                }
+            }
+        }
+
+        const applyFiltersDebounced = debounce(async () => {
+            await fetchHistoryBatch({ append: false });
+        }, 350);
+
+        // Wrapper for public use
+        async function applyFilters() {
+            return applyFiltersDebounced();
+        }
+
+        // ============ Display Data ============
+        function displayData(data) {
+            historyTable.innerHTML = '';
+
+            if (data.length === 0) {
+                historyTable.innerHTML = 
+                    '<tr class="no-data"><td colspan="7">No data found for selected filters</td></tr>';
+                document.getElementById('total-count').textContent = '0';
+                document.getElementById('date-range').textContent = '-';
+                return;
+            }
+
+            appendRows(data, false);
+        }
+
+        function appendRows(data, shouldKeepExisting = true) {
+            if (!shouldKeepExisting) {
+                historyTable.innerHTML = '';
+            }
+
+            // Use DocumentFragment for faster rendering
+            const fragment = document.createDocumentFragment();
+            
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                const dateObj = new Date(row.time * 1000);
+                const dateStr = dateObj.toLocaleString('en-US', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                });
+
+                const symbolValue = row.symbol || currentSymbol;
+                const symbolDisplay = symbolValue.replace('.x', '');
+                const open = parseFloat(row.open).toFixed(5);
+                const high = parseFloat(row.high).toFixed(5);
+                const low = parseFloat(row.low).toFixed(5);
+                const close = parseFloat(row.close).toFixed(5);
+                const volume = Math.round(row.volume);
+
+                const closeClass = close >= open ? 'price-up' : 'price-down';
+
+                tr.innerHTML = `
+                    <td>${dateStr}</td>
+                    <td><strong>${symbolDisplay}</strong></td>
+                    <td>${open}</td>
+                    <td>${high}</td>
+                    <td>${low}</td>
+                    <td class="${closeClass}">${close}</td>
+                    <td>${volume}</td>
+                `;
+
+                fragment.appendChild(tr);
+            });
+
+            historyTable.appendChild(fragment);
+            document.getElementById('total-count').textContent = allData.length;
+            
+            if (allData.length > 0) {
+                const minTime = new Date(allData[0].time * 1000).toLocaleDateString();
+                const maxTime = new Date(allData[allData.length - 1].time * 1000).toLocaleDateString();
+                document.getElementById('date-range').textContent = `${minTime} to ${maxTime}`;
+            }
+        }
+
+        function updateLoadMoreState() {
+            if (hasMoreRows && allData.length > 0) {
+                loadMoreWrapper.style.display = 'flex';
+            } else {
+                loadMoreWrapper.style.display = 'none';
+            }
+        }
+
+        async function loadMoreHistory() {
+            await fetchHistoryBatch({ append: true });
+        }
+
+        // ============ Export CSV ============
+        function exportCSV() {
+            if (allData.length === 0) {
+                alert('⚠️ No data to export. Please search first.');
+                return;
+            }
+
+            let csv = 'Date,Symbol,Open,High,Low,Close,Volume\n';
+            
+            allData.forEach(row => {
+                const dateObj = new Date(row.time * 1000);
+                const dateStr = dateObj.toISOString().split('T')[0];
+                const symbolForExport = (row.symbol || currentSymbol).replace('.x', '');
+                csv += `${dateStr},${symbolForExport},${row.open},${row.high},${row.low},${row.close},${row.volume}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `history_${currentSymbol}_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // ============ Reset Filters ============
+        function resetFilters() {
+            yearSelect.value = '';
+            monthSelect.value = '';
+            dateInput.value = '';
+            historyTable.innerHTML = 
+                '<tr class="no-data"><td colspan="7">Loading recent data...</td></tr>';
+            document.getElementById('total-count').textContent = '0';
+            document.getElementById('date-range').textContent = '-';
+            errorMsg.style.display = 'none';
+            applyFilters();
+        }
+
+        // ============ Show Loading ============
+        function showLoading() {
+            historyTable.innerHTML = `
+                <tr class="no-data">
+                    <td colspan="7">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <p>Loading data...</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // ============ Show Error ============
+        function showError(msg) {
+            errorMsg.textContent = msg;
+            errorMsg.style.display = 'block';
+            historyTable.innerHTML = 
+                '<tr class="no-data"><td colspan="7">Error loading data</td></tr>';
+            loadMoreWrapper.style.display = 'none';
+        }
+
+        // ============ Event Listeners ============
+        symbolSelect.addEventListener('change', (e) => {
+            currentSymbol = e.target.value;
+            loadAvailableDatesDebounced();
+            applyFilters();
+        });
+
+        timeframeSelect.addEventListener('change', (e) => {
+            currentTimeframe = e.target.value;
+            document.getElementById('tf-display').textContent = currentTimeframe;
+            symbolsCache = null;
+            yearSelect.value = '';
+            monthSelect.value = '';
+            loadSymbols().then(() => {
+                loadAvailableDatesDebounced();
+                applyFilters();
+            });
+        });
+
+        yearSelect.addEventListener('change', () => {
+            monthSelect.value = '';
+            loadAvailableDatesDebounced();
+            applyFilters();
+        });
+
+        monthSelect.addEventListener('change', () => {
+            applyFilters();
+        });
+
+        // ============ Initialize ============
+        (async () => {
+            await loadTimeframes();
+            await loadSymbols();
+            await loadAvailableDatesDebounced();
+            await applyFilters();
+        })();
+    </script>
+{% endblock %}
